@@ -16,6 +16,8 @@ var (
 )
 
 func main() {
+	flag.Parse()
+
 	dir := os.Args[len(os.Args)-1]
 	entries, err := os.ReadDir(dir)
 	if err != nil {

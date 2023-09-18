@@ -21,7 +21,7 @@ func main() {
 	dir := os.Args[len(os.Args)-1]
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to open configs directory: ", err)
 	}
 
 	res := api.NewConfig()
@@ -33,7 +33,6 @@ func main() {
 				continue
 			}
 
-			var currCtx string
 			res.APIVersion = cfg.APIVersion
 			res.Kind = cfg.Kind
 			for name, cluster := range cfg.Clusters {
@@ -41,7 +40,7 @@ func main() {
 			}
 			for name, context := range cfg.Contexts {
 				parts := strings.Split(name, "/")
-				currCtx = parts[len(parts)-1]
+				currCtx := parts[len(parts)-1]
 				res.Contexts[currCtx] = context
 			}
 			for name, ext := range cfg.Extensions {
@@ -51,8 +50,12 @@ func main() {
 				res.AuthInfos[name] = auth
 			}
 			res.Preferences = cfg.Preferences
-			res.CurrentContext = currCtx
 		}
+	}
+
+	currCfg, err := clientcmd.NewDefaultPathOptions().GetStartingConfig()
+	if err == nil {
+		res.CurrentContext = currCfg.CurrentContext
 	}
 
 	if err := clientcmd.WriteToFile(*res, *out); err != nil {
